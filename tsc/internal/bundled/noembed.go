@@ -1,24 +1,14 @@
-///go:build noembed
-
 package bundled
 
 import (
 	"fmt"
 	"os"
 	"sync"
-	"testing"
 
 	"github.com/microsoft/TypeScript/tsc/internal/osutil"
 	"github.com/microsoft/TypeScript/tsc/internal/tspath"
-	"github.com/microsoft/TypeScript/tsc/internal/vfs"
 	"github.com/microsoft/TypeScript/tsc/internal/vfs/osvfs"
 )
-
-const embedded = false
-
-func wrapFS(fs vfs.FS) vfs.FS {
-	return fs
-}
 
 var executableDir = sync.OnceValue(func() tspath.RootedDirectoryPath {
 	exe, err := osutil.Executable()
@@ -29,17 +19,12 @@ var executableDir = sync.OnceValue(func() tspath.RootedDirectoryPath {
 	return realExe.Directory()
 })
 
-var libPath = sync.OnceValue(func() string {
-	if testing.Testing() {
-		return TestingLibPath()
+var noembedLibPath = sync.OnceValue(func() string {
+	dirStr := os.Getenv("TSC_BUNDLE_DIR")
+	if dirStr == "" {
+		return ""
 	}
-
-	var dir tspath.RootedDirectoryPath
-	if customDir := os.Getenv("TSC_BUNDLE_DIR"); customDir != "" {
-		dir = tspath.RootedDirectoryPathFromAbsolute(customDir)
-	} else {
-		dir = executableDir()
-	}
+	dir := tspath.RootedDirectoryPathFromAbsolute(dirStr)
 
 	libdts := dir.ResolveFile("lib.d.ts")
 	if info := osvfs.FS().Stat(libdts.AsPath()); info == nil {
@@ -49,6 +34,3 @@ var libPath = sync.OnceValue(func() string {
 	return dir.AsString()
 })
 
-func IsBundled(path string) bool {
-	return false
-}

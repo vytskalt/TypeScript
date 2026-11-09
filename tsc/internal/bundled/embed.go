@@ -1,5 +1,3 @@
-//go:build never
-
 package bundled
 
 import (
@@ -11,8 +9,6 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/vfs"
 )
 
-const embedded = true
-
 const scheme = "bundled:///"
 
 func splitPath(path string) (rest string, ok bool) {
@@ -20,10 +16,17 @@ func splitPath(path string) (rest string, ok bool) {
 }
 
 func libPath() string {
+	no := noembedLibPath()
+	if no != "" {
+		return no
+	}
 	return scheme + "libs"
 }
 
 func IsBundled(path string) bool {
+	if noembedLibPath() != "" {
+		return false
+	}
 	_, ok := splitPath(path)
 	return ok
 }
@@ -40,6 +43,9 @@ type wrappedFS struct {
 var _ vfs.FS = (*wrappedFS)(nil)
 
 func wrapFS(fs vfs.FS) vfs.FS {
+	if noembedLibPath() != "" {
+		return fs
+	}
 	return &wrappedFS{fs: fs}
 }
 

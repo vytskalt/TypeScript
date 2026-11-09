@@ -15,9 +15,6 @@ import (
 
 // Define the below here to consolidate documentation.
 
-// Embedded is true if the bundled files are implemented through an embedded FS.
-const Embedded = embedded
-
 // WrapFS returns an FS which redirects embedded paths to the embedded file system.
 // If the embedded file system is not available, it returns the original FS.
 func WrapFS(fs vfs.FS) vfs.FS {
