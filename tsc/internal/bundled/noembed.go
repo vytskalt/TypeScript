@@ -1,9 +1,10 @@
-//go:build noembed
+///go:build noembed
 
 package bundled
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 
@@ -32,7 +33,13 @@ var libPath = sync.OnceValue(func() string {
 	if testing.Testing() {
 		return TestingLibPath()
 	}
-	dir := executableDir()
+
+	var dir tspath.RootedDirectoryPath
+	if customDir := os.Getenv("TSC_BUNDLE_DIR"); customDir != "" {
+		dir = tspath.RootedDirectoryPathFromAbsolute(customDir)
+	} else {
+		dir = executableDir()
+	}
 
 	libdts := dir.ResolveFile("lib.d.ts")
 	if info := osvfs.FS().Stat(libdts.AsPath()); info == nil {
